@@ -24,7 +24,7 @@
 
  /*
  TODO List:
- - verbose/debug mode +others?
+ - verbose/debug mode +others
  - anti-timeout
  - check socket activity and close after timeout
  */
