@@ -1,0 +1,47 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SocksOverRDP-Plugin", "SocksOverRDP-Plugin\SocksOverRDP-Plugin.vcxproj", "{9402DF45-A060-4881-9F64-D16E094B97A7}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SocksOverRDP-PluginPS", "SocksOverRDP-Plugin\SocksOverRDP-PluginPS.vcxproj", "{15DEE2D8-6972-49C0-9369-35730A29A2CF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9402DF45-A060-4881-9F64-D16E094B97A7} = {9402DF45-A060-4881-9F64-D16E094B97A7}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SocksOverRDP-Server", "SocksOverRDP-Server\SocksOverRDP-Server.vcxproj", "{C7E1D0A7-0ADA-4DF4-99DA-8527E856670F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9402DF45-A060-4881-9F64-D16E094B97A7}.Debug|x64.ActiveCfg = Debug|x64
+		{9402DF45-A060-4881-9F64-D16E094B97A7}.Debug|x64.Build.0 = Debug|x64
+		{9402DF45-A060-4881-9F64-D16E094B97A7}.Debug|x86.ActiveCfg = Debug|Win32
+		{9402DF45-A060-4881-9F64-D16E094B97A7}.Debug|x86.Build.0 = Debug|Win32
+		{9402DF45-A060-4881-9F64-D16E094B97A7}.Release|x64.ActiveCfg = Release|x64
+		{9402DF45-A060-4881-9F64-D16E094B97A7}.Release|x64.Build.0 = Release|x64
+		{9402DF45-A060-4881-9F64-D16E094B97A7}.Release|x86.ActiveCfg = Release|Win32
+		{9402DF45-A060-4881-9F64-D16E094B97A7}.Release|x86.Build.0 = Release|Win32
+		{15DEE2D8-6972-49C0-9369-35730A29A2CF}.Debug|x64.ActiveCfg = Debug|x64
+		{15DEE2D8-6972-49C0-9369-35730A29A2CF}.Debug|x86.ActiveCfg = Debug|Win32
+		{15DEE2D8-6972-49C0-9369-35730A29A2CF}.Release|x64.ActiveCfg = Release|x64
+		{15DEE2D8-6972-49C0-9369-35730A29A2CF}.Release|x86.ActiveCfg = Release|Win32
+		{C7E1D0A7-0ADA-4DF4-99DA-8527E856670F}.Debug|x64.ActiveCfg = Debug|x64
+		{C7E1D0A7-0ADA-4DF4-99DA-8527E856670F}.Debug|x64.Build.0 = Debug|x64
+		{C7E1D0A7-0ADA-4DF4-99DA-8527E856670F}.Debug|x86.ActiveCfg = Debug|Win32
+		{C7E1D0A7-0ADA-4DF4-99DA-8527E856670F}.Debug|x86.Build.0 = Debug|Win32
+		{C7E1D0A7-0ADA-4DF4-99DA-8527E856670F}.Release|x64.ActiveCfg = Release|x64
+		{C7E1D0A7-0ADA-4DF4-99DA-8527E856670F}.Release|x64.Build.0 = Release|x64
+		{C7E1D0A7-0ADA-4DF4-99DA-8527E856670F}.Release|x86.ActiveCfg = Release|Win32
+		{C7E1D0A7-0ADA-4DF4-99DA-8527E856670F}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,42 @@
+// SocksOverRDPPlugin.idl : IDL source for SocksOverRDP-Plugin
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (SocksOverRDPPlugin.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	object,
+	uuid(a817e7a2-43fa-11d0-9e44-00aa00b6770a),
+	dual,	
+	pointer_default(unique)
+]
+interface IComponentRegistrar : IDispatch
+{
+	[id(1)]	HRESULT Attach([in] BSTR bstrPath);
+	[id(2)]	HRESULT RegisterAll();
+	[id(3)]	HRESULT UnregisterAll();
+	[id(4)]	HRESULT GetComponents([out] SAFEARRAY(BSTR)* pbstrCLSIDs, [out] SAFEARRAY(BSTR)* pbstrDescriptions);
+	[id(5)]	HRESULT RegisterComponent([in] BSTR bstrCLSID);
+	[id(6)] HRESULT UnregisterComponent([in] BSTR bstrCLSID);
+};
+
+[
+	uuid(392B9DEE-7E00-4C58-831B-50C58EAA887F),
+	version(1.0),
+	custom(a817e7a1-43fa-11d0-9e44-00aa00b6770a,"{61715a27-63a8-4dc1-9857-83eb00fb60a3}")
+]
+library SocksOverRDPPluginLib
+{
+	importlib("stdole2.tlb");
+	[
+		uuid(61715a27-63a8-4dc1-9857-83eb00fb60a3)		
+	]
+	coclass CompReg
+	{
+		[default] interface IComponentRegistrar;
+	};
+};
+

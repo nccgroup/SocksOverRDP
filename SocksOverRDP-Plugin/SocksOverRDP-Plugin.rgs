@@ -1,0 +1,52 @@
+HKCR
+{
+	CLSID
+	{
+		SocksOverRDP-Plugin.SocksOverRDP-Plugin.1 = s 'SocksOverRDP-Plugin Class'
+		{
+			CLSID = s '{61715a27-63a8-4dc1-9857-83eb00fb60a3}'
+		}
+		SocksOverRDP-Plugin.SocksOverRDP-Plugin = s 'SocksOverRDP-Plugin Class'
+		{
+			CLSID = s '{61715a27-63a8-4dc1-9857-83eb00fb60a3}'
+			CurVer = s 'SocksOverRDP-Plugin.SocksOverRDP-Plugin.1'
+		}
+		ForceRemove {61715a27-63a8-4dc1-9857-83eb00fb60a3} = s 'SocksOverRDP-Plugin Class'
+		{
+			ProgID = s 'SocksOverRDP-Plugin.SocksOverRDP-Plugin.1'
+			VersionIndependentProgID = s 'SocksOverRDP-Plugin.SocksOverRDP-Plugin'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Free'
+			}
+			'TypeLib' = s '{392B9DEE-7E00-4C58-831B-50C58EAA887F}'
+		}		
+	}		
+}
+
+HKCU
+{ 
+	Software
+	{
+		Microsoft
+		{
+			'Terminal Server Client'
+			{
+				Default
+				{
+					AddIns
+					{
+						SocksOverRDP-Plugin
+						{
+							val Name = s '{61715a27-63a8-4dc1-9857-83eb00fb60a3}'
+							val enabled = d '1'
+							val ip = s '127.0.0.1'
+							val port = s '1080'
+						}
+					}
+				}
+			}
+		}
+	}
+}
