@@ -1,8 +1,8 @@
 # Socks Over RDP #
-This tool was created to extend the offered capabilities of Terminal Services (or Remote Desktop Services). While it was not possible to create a SOCKS proxy that tunnels data over the RDP channel with this two-pieces tool it is, just like SSH does with the "-D" argument.
+This tool adds the capability of a SOCKS proxy to Terminal Services (or Remote Desktop Services). 
 It uses Dynamic Virtual Channel that enables us to communicate over an open RDP connection without the need to open a new socket, connection or a port on a firewall. 
 
-![logo](https://github.com/earthquake/SocksOverRDP/blob/master/misc/SocksOverRDP.png?raw=true)
+<img src="https://github.com/earthquake/SocksOverRDP/blob/master/misc/SocksOverRDP.png" data-canonical-src="https://github.com/earthquake/SocksOverRDP/blob/master/misc/SocksOverRDP.png" width="30%" height="30%" />
 
 ### How can I use it? ###
 You need to install a plugin (*.dll*) on your client computer that you use to connect to the RDP server. On the RDP server you need to use the other half of the project the *.exe*, which creates the channel between the plugin and the server executable. 
@@ -19,13 +19,13 @@ Right now the client works with mstsc.exe (Remote Desktop Client), but there is 
 You can grab the whole project and compile it by yourself or just use the compiled binaries from the [Releases section](https://github.com/earthquake/SocksOverRDP/releases). It is important that the correct binary is used in all cases, please select the correct one for the corresponding architecture (if your client is 32bit but the server is 64bit then grab the 32bit dll and 64bit exe).
 The *.dll* needs to be placed on the client computer in any directory (for long-term use, it is recommended to copy it into the %SYSROOT%\\system32\\ or %SYSROOT%\\SysWoW64\\) and install it with the following command as an elevated user (a.k.a Administrator): 
 
-`regsvr32.exe UDVC-Plugin.dll`
+`regsvr32.exe SocksOverRDP-Plugin.dll`
 
 If your user is not an administrator, you need to import the registry settings under your user too. Please use the *SocksOverRDP-Plugin.reg* file for that.
 
 If you wish to remove it: 
 
-`regsvr32.exe /u UDVC-Plugin.dll`
+`regsvr32.exe /u SocksOverRDP-Plugin.dll`
 
 **Every time you connect to an RDP server from now on, this plugin will be loaded and will configure itself as it was specified in the registry (see below).**
 
