@@ -2,7 +2,7 @@
 This tool was created to extend the offered capabilities of Terminal Services (or Remote Desktop Services). While it was not possible to create a SOCKS proxy that tunnels data over the RDP channel with this two-pieces tool it is, just like SSH does with the "-D" argument.
 It uses Dynamic Virtual Channel that enables us to communicate over an open RDP connection without the need to open a new socket, connection or a port on a firewall. 
 
-![logo](https://github.com/earthquake/SocksOverRDP/blob/master/misc/logo.png?raw=true)
+![logo](https://github.com/earthquake/SocksOverRDP/blob/master/misc/SocksOverRDP.png?raw=true)
 
 ### How can I use it? ###
 You need to install a plugin (*.dll*) on your client computer that you use to connect to the RDP server. On the RDP server you need to use the other half of the project the *.exe*, which creates the channel between the plugin and the server executable. 
