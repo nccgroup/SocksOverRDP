@@ -74,6 +74,60 @@ HANDLE	hChannel;
 HANDLE	hWTSHandle = NULL;
 BOOL	bVerbose = FALSE, bDebug = FALSE;
 
+VOID usage(WCHAR *cmdname)
+{
+	wprintf(L"Usage: %s [-v] [-t timeout_val]\n"
+		"-h\t\tThis help\n"
+		"-v\t\tVerbose Mode\n",
+//		"-t n\tTimeout on threads. Kills any thread and corresponding connection after n seconds\n",
+		cmdname);
+
+	return;
+}
+
+BOOL parse_argv(INT argc, __in_ecount(argc) WCHAR **argv)
+{
+	int num = 0;
+
+	while (num < argc - 1)
+	{
+		num++;
+
+		if (wcsncmp(argv[num], L"-", 1))
+		{
+			wprintf(L"[-] Invalid argument: %s\n", argv[num]);
+			usage(argv[0]);
+			return FALSE;
+		}
+
+		switch (argv[num][1])
+		{
+		case 'h':
+		case '?':
+			usage(argv[0]);
+			return FALSE;
+		case 'v':
+			bVerbose = TRUE;
+			break;
+		case 'd':
+			bDebug = TRUE;
+			break;
+		//case 't':
+		//	num++;
+
+			//dwTimeout = atoi(argv[num]);
+			//printf("timeout: %ld\n", dwTimeout);
+			break;
+
+		default:
+			wprintf(L"[-] Invalid argument: %s\n", argv[num]);
+			usage(argv[0]);
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
 VOID DebugPrint(HRESULT hrDbg, __in_z LPWSTR fmt, ...)
 {
 	HRESULT	hr;
@@ -392,6 +446,10 @@ INT _cdecl wmain(INT argc, __in_ecount(argc) WCHAR **argv)
 	running_args.ip = L"127.0.0.1";
 
 	wprintf(L"Socks Over RDP by Balazs Bucsay [[@xoreipeip]]\n\n");
+
+	if (argc > 1)
+		if (!parse_argv(argc, argv))
+			return -1;
 	
 	if ((ret = OpenDynamicChannel(SocksOverRDP_CHANNEL_NAME, &hChannel)) != ERROR_SUCCESS)
 	{
@@ -524,7 +582,7 @@ INT _cdecl wmain(INT argc, __in_ecount(argc) WCHAR **argv)
 
 				pta->dwThreadId = dwThreadId;
 				pta->hThread = hDummyThread;
-				if (bDebug) printf("[*] %08X: Thread not found, <ailslot created\n", dwRemoteThreadId);
+				if (bDebug) printf("[*] %08X: Thread not found, Mailslot created\n", dwRemoteThreadId);
 			}
 			else
 			{

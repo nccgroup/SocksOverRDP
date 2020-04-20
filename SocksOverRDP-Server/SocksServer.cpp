@@ -152,6 +152,27 @@ int CheckAuthentication(char *buf_full, int ret)
 	return -1;
 }
 
+void sendReplyv4(char replyField)
+{
+	char	answer[8];
+	DWORD   dwWritten, ret;
+
+	struct threads *pta;
+
+	memset(answer, 0, 8);
+
+	pta = LookupThread(GetCurrentThreadId());
+
+	answer[0] = 4;
+	answer[1] = replyField;
+
+	if (replyField == 0x5A)
+		WriteChannel(answer, 8, &dwWritten, pta->dwRemoteThreadId, FALSE);
+	else
+		WriteChannel(answer, 8, &dwWritten, pta->dwRemoteThreadId, TRUE);
+}
+
+
 void sendReply(char replyField, char addressType, char *addr, char *port)
 {
 	char	null[20], *answer, answer2[300 + sizeof(DWORD) + sizeof(DWORD) + 1];
@@ -207,16 +228,10 @@ int getAddressInfo(sockaddr_in *sockaddrin, sockaddr_in6 *sockaddrin6, char *buf
 
 	char domain[256];
 
-	//IPv4
-	if (buf[3] == 1)
+	if (buf[0] == 4)
 	{
-		if (ret != 10)
-		{
-			if (bVerbose) printf("[-] SOCKS thread(%08Xd) getAddressInfo IPv4 selected, length mismatch: %ld\n", GetCurrentThreadId(), ret);
-			return -1;
-		}
 		sockaddrin->sin_family = AF_INET;
-		memcpy_s(&(sockaddrin->sin_port), 2, buf + 8, 2);
+		memcpy_s(&(sockaddrin->sin_port), 2, buf + 2, 2);
 		memcpy_s(&(sockaddrin->sin_addr), 4, buf + 4, 4);
 
 		char *s = (char *)malloc(INET_ADDRSTRLEN);
@@ -224,53 +239,74 @@ int getAddressInfo(sockaddr_in *sockaddrin, sockaddr_in6 *sockaddrin6, char *buf
 		if (bVerbose) printf("[+] SOCKS thread(%08X) getAddressInfo CONNECT IPv4: %s:%hd\n", GetCurrentThreadId(), s, htons(sockaddrin->sin_port));
 		free(s);
 	}
-	//DNS
-	if (buf[3] == 3)
+
+	if (buf[0] == 5)
 	{
-		if ((7 + (unsigned char)buf[4]) != ret)
+		//IPv4
+		if (buf[3] == 1)
 		{
-			if (bVerbose) printf("[-] SOCKS thread(%08X) getAddressInfo DNS selected, length mismatch: %ld\n", GetCurrentThreadId(), ret);
-			return -1;
+			if (ret != 10)
+			{
+				if (bVerbose) printf("[-] SOCKS thread(%08Xd) getAddressInfo IPv4 selected, length mismatch: %ld\n", GetCurrentThreadId(), ret);
+				return -1;
+			}
+			sockaddrin->sin_family = AF_INET;
+			memcpy_s(&(sockaddrin->sin_port), 2, buf + 8, 2);
+			memcpy_s(&(sockaddrin->sin_addr), 4, buf + 4, 4);
+
+			char *s = (char *)malloc(INET_ADDRSTRLEN);
+			inet_ntop(AF_INET, &(sockaddrin->sin_addr), s, INET_ADDRSTRLEN);
+			if (bVerbose) printf("[+] SOCKS thread(%08X) getAddressInfo CONNECT IPv4: %s:%hd\n", GetCurrentThreadId(), s, htons(sockaddrin->sin_port));
+			free(s);
 		}
-		ZeroMemory(&hints, sizeof(hints));
-		ZeroMemory(domain, 256);
-
-		// change for IPv6?
-		hints.ai_family = AF_INET;
-		hints.ai_socktype = SOCK_STREAM;
-		hints.ai_protocol = IPPROTO_TCP;
-		hints.ai_flags = AI_PASSIVE;
-
-		memcpy_s(domain, 256, (void *)(buf + 5), (unsigned char)(buf[4]));
-
-		if ((ret = GetAddrInfoA(domain, "1", &hints, &result)) != 0) {
-			if (bVerbose) printf("[-] SOCKS thread(%08X) getAddressInfo GetAddrInfoA failed with error: %ld %ld\n", GetCurrentThreadId(), ret, WSAGetLastError());
-			return -1;
-		}
-		memcpy_s(sockaddrin, sizeof(sockaddr_in), result->ai_addr, sizeof(sockaddr_in));
-		memcpy_s(&(sockaddrin->sin_port), 2, buf + ((unsigned char)buf[4]) + 5, 2);
-
-		char *s = (char *)malloc(INET_ADDRSTRLEN);
-		inet_ntop(AF_INET, &(sockaddrin->sin_addr), s, INET_ADDRSTRLEN);
-		if (bVerbose) printf("[+] SOCKS thread(%08X) getAddressInfo CONNECT DNS: %s(%s):%hd\n", GetCurrentThreadId(), domain, s, htons(sockaddrin->sin_port));
-		free(s);
-	}
-	//IPv6
-	if (buf[3] == 4)
-	{
-		if (ret != 22)
+		//DNS
+		if (buf[3] == 3)
 		{
-			if (bVerbose) printf("[-] SOCKS thread(%08X) getAddressInfo IPv6 selected, length mismatch: %ld\n", GetCurrentThreadId(), ret);
-			return -1;
-		}
-		sockaddrin6->sin6_family = AF_INET6;
-		memcpy_s(&(sockaddrin6->sin6_port), 2, buf + 20, 2);
-		memcpy_s(&(sockaddrin6->sin6_addr), 30, buf + 4, 16);
+			if ((7 + (unsigned char)buf[4]) != ret)
+			{
+				if (bVerbose) printf("[-] SOCKS thread(%08X) getAddressInfo DNS selected, length mismatch: %ld\n", GetCurrentThreadId(), ret);
+				return -1;
+			}
+			ZeroMemory(&hints, sizeof(hints));
+			ZeroMemory(domain, 256);
 
-		char *s = (char *)malloc(INET6_ADDRSTRLEN);
-		inet_ntop(AF_INET6, &(sockaddrin6->sin6_addr), s, INET6_ADDRSTRLEN);
-		if (bVerbose) printf("[+] SOCKS thread(%08X) getAddressInfo CONNECT IPv6: %s:%hd\n", GetCurrentThreadId(), s, htons(sockaddrin6->sin6_port));
-		free(s);
+			// change for IPv6?
+			hints.ai_family = AF_INET;
+			hints.ai_socktype = SOCK_STREAM;
+			hints.ai_protocol = IPPROTO_TCP;
+			hints.ai_flags = AI_PASSIVE;
+
+			memcpy_s(domain, 256, (void *)(buf + 5), (unsigned char)(buf[4]));
+
+			if ((ret = GetAddrInfoA(domain, "1", &hints, &result)) != 0) {
+				if (bVerbose) printf("[-] SOCKS thread(%08X) getAddressInfo GetAddrInfoA failed with error: %ld %ld\n", GetCurrentThreadId(), ret, WSAGetLastError());
+				return -1;
+			}
+			memcpy_s(sockaddrin, sizeof(sockaddr_in), result->ai_addr, sizeof(sockaddr_in));
+			memcpy_s(&(sockaddrin->sin_port), 2, buf + ((unsigned char)buf[4]) + 5, 2);
+
+			char *s = (char *)malloc(INET_ADDRSTRLEN);
+			inet_ntop(AF_INET, &(sockaddrin->sin_addr), s, INET_ADDRSTRLEN);
+			if (bVerbose) printf("[+] SOCKS thread(%08X) getAddressInfo CONNECT DNS: %s(%s):%hd\n", GetCurrentThreadId(), domain, s, htons(sockaddrin->sin_port));
+			free(s);
+		}
+		//IPv6
+		if (buf[3] == 4)
+		{
+			if (ret != 22)
+			{
+				if (bVerbose) printf("[-] SOCKS thread(%08X) getAddressInfo IPv6 selected, length mismatch: %ld\n", GetCurrentThreadId(), ret);
+				return -1;
+			}
+			sockaddrin6->sin6_family = AF_INET6;
+			memcpy_s(&(sockaddrin6->sin6_port), 2, buf + 20, 2);
+			memcpy_s(&(sockaddrin6->sin6_addr), 30, buf + 4, 16);
+
+			char *s = (char *)malloc(INET6_ADDRSTRLEN);
+			inet_ntop(AF_INET6, &(sockaddrin6->sin6_addr), s, INET6_ADDRSTRLEN);
+			if (bVerbose) printf("[+] SOCKS thread(%08X) getAddressInfo CONNECT IPv6: %s:%hd\n", GetCurrentThreadId(), s, htons(sockaddrin6->sin6_port));
+			free(s);
+		}
 	}
 
 	return 0;
@@ -330,13 +366,46 @@ SOCKET DoConnection(char *buf, int ret)
 		// BIND
 		if (buf[1] == 2)
 		{
-			printf("[+] SOCKS DoConnection BIND\n");
+			if (bVerbose) printf("[+] SOCKS DoConnection BIND\n");
 		}
 		// UDP ASSOCIATE
 		if (buf[1] == 3)
 		{
 			//SOCK_DGRAM
-			printf("[+] SOCKS DoConnection UDP ASSOCIATE\n");
+			if (bVerbose) printf("[+] SOCKS DoConnection UDP ASSOCIATE\n");
+		}
+	}
+	else if (buf[0] == 4)
+	{
+		if (getAddressInfo(&sockaddrin, &sockaddrin6, buf, ret) < 0) {
+			if (bVerbose) printf("[-] SOCKS thread(%08X) DoConnection v4 could not create socket structs\n", GetCurrentThreadId());
+			// this isnt "general SOCKS server failure", but there no better error code
+			sendReplyv4(0x5B);
+			return NULL;
+		}
+
+		// CONNECT
+		if (buf[1] == 1)
+		{
+			if ((sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == INVALID_SOCKET) {
+				if (bVerbose) printf("[-] SOCKS thread(%08X) DoConnection v4 socket() failed with: %ld\n", GetCurrentThreadId(), WSAGetLastError());
+				sendReplyv4(0x5B);
+				return NULL;
+			}
+
+			if ((ret = connect(sock, (SOCKADDR *)&sockaddrin, sizeof(sockaddrin))) == SOCKET_ERROR) {
+				if (bVerbose) printf("[-] SOCKS thread(%08X) DoConnection v4 connect() failed with: %ld\n", GetCurrentThreadId(), WSAGetLastError());
+				sendReplyv4(0x5B);
+				return NULL;
+			}
+
+			sendReplyv4(0x5A);
+			return sock;
+		}
+		// BIND
+		if (buf[1] == 2)
+		{
+			if (bVerbose) printf("[+] SOCKS DoConnection v4 BIND\n");
 		}
 	}
 	else
@@ -377,7 +446,20 @@ DWORD WINAPI HandleClient(void *param)
 		{
 			//socks4
 			if (bDebug) printf("%08X: SOCKS HandleClient Socks4 request\n", pta->dwRemoteThreadId);
-			goto exitthread;
+			if (dwRet > 6)
+			{
+				if ((sRelayConnection = DoConnection(buf + 1, dwRet - 1)) == NULL)
+				{
+					if (bDebug) printf("%08X: SOCKS HandleClient v4 no socket created\n", pta->dwRemoteThreadId);
+					goto exitthread;
+				}
+			}
+			else
+			{
+				if (bDebug) printf("%08X: SOCKS HandleClient v4 connection request less than 6 error: %ld %ld\n", pta->dwRemoteThreadId, dwRet, WSAGetLastError());
+				goto exitthread;
+			}
+
 		}
 		else
 			if (buf[1] == 5)
@@ -394,6 +476,68 @@ DWORD WINAPI HandleClient(void *param)
 					if (bDebug) printf("%08X: SOCKS HandleClient auth failed: %ld\n", pta->dwRemoteThreadId, iAuthNum);
 					goto exitthread;
 				}
+
+
+				if (iAuthNum == -1)
+				{
+					if (bDebug) printf("%08X: SOCKS HandleClient wrong authnum: %ld\n", pta->dwRemoteThreadId, iAuthNum);
+					goto exitthread;
+				}
+
+				// socks authentication
+				if (iAuthNum > 0)
+				{
+					if (bDebug) printf("%08X: SOCKS HandleClient authentication invoked: %ld\n", pta->dwRemoteThreadId, iAuthNum);
+
+					if (ReadFile(hMailSlot, buf, BUF_SIZE, &dwRet, NULL))
+					{
+						if (dwRet > 2)
+						{
+							if (!method_functions[iAuthNum](hMailSlot, dwRet, buf))
+							{
+								if (bDebug) printf("%08X: SOCKS HandleClient authentication failed: %ld\n", pta->dwRemoteThreadId, iAuthNum);
+								goto exitthread;
+							}
+						}
+						else
+						{
+							if (bDebug) printf("%08X: SOCKS HandleClient less than 2 recv error: %ld %ld\n", pta->dwRemoteThreadId, dwRet, WSAGetLastError());
+							goto exitthread;
+						}
+					}
+					else
+					{
+						if (bDebug) printf("%08X: SOCKS HandleClient authentication recv error: %ld %ld\n", pta->dwRemoteThreadId, dwRet, WSAGetLastError());
+						goto exitthread;
+					}
+				}
+
+				// socks connection phase
+				if (ReadFile(hMailSlot, buf, BUF_SIZE, &dwRet, NULL))
+				{
+					if (dwRet > 0)
+						if (buf[0] == 0x01)
+							goto exitthread;
+					if (dwRet > 6)
+					{
+						if ((sRelayConnection = DoConnection(buf + 1, dwRet - 1)) == NULL)
+						{
+							if (bDebug) printf("%08X: SOCKS HandleClient no socket created\n", pta->dwRemoteThreadId);
+							goto exitthread;
+						}
+					}
+					else
+					{
+						if (bDebug) printf("%08X: SOCKS HandleClient connection request less than 6 error: %ld %ld\n", pta->dwRemoteThreadId, dwRet, WSAGetLastError());
+						goto exitthread;
+					}
+				}
+				else
+				{
+					if (bDebug) printf("%08X: SOCKS HandleClient connection request recv error: %ld %ld\n", pta->dwRemoteThreadId, dwRet, WSAGetLastError());
+					goto exitthread;
+				}
+
 			}
 			else
 			{
@@ -413,67 +557,6 @@ DWORD WINAPI HandleClient(void *param)
 		if (bDebug) printf("%08X: SOCKS HandleClient while ReadFile error: %ld\n", pta->dwRemoteThreadId, GetLastError());
 		goto exitthread;
 	}
-
-	if (iAuthNum == -1)
-	{
-		if (bDebug) printf("%08X: SOCKS HandleClient wrong authnum: %ld\n", pta->dwRemoteThreadId, iAuthNum);
-		goto exitthread;
-	}
-
-	// socks authentication
-	if (iAuthNum > 0)
-	{
-		if (bDebug) printf("%08X: SOCKS HandleClient authentication invoked: %ld\n", pta->dwRemoteThreadId, iAuthNum);
-
-		if (ReadFile(hMailSlot, buf, BUF_SIZE, &dwRet, NULL))
-		{
-			if (dwRet > 2)
-			{
-				if (!method_functions[iAuthNum](hMailSlot, dwRet, buf))
-				{
-					if (bDebug) printf("%08X: SOCKS HandleClient authentication failed: %ld\n", pta->dwRemoteThreadId, iAuthNum);
-					goto exitthread;
-				}
-			}
-			else
-			{
-				if (bDebug) printf("%08X: SOCKS HandleClient less than 2 recv error: %ld %ld\n", pta->dwRemoteThreadId, dwRet, WSAGetLastError());
-				goto exitthread;
-			}
-		}
-		else
-		{
-			if (bDebug) printf("%08X: SOCKS HandleClient authentication recv error: %ld %ld\n", pta->dwRemoteThreadId, dwRet, WSAGetLastError());
-			goto exitthread;
-		}
-	}
-
-	// socks connection phase
-	if (ReadFile(hMailSlot, buf, BUF_SIZE, &dwRet, NULL))
-	{
-		if (dwRet > 0)
-			if (buf[0] == 0x01) 
-				goto exitthread;
-		if (dwRet > 6)
-		{
-			if ((sRelayConnection = DoConnection(buf + 1, dwRet - 1)) == NULL)
-			{
-				if (bDebug) printf("%08X: SOCKS HandleClient no socket created\n", pta->dwRemoteThreadId);
-				goto exitthread;
-			}
-		}
-		else
-		{
-			if (bDebug) printf("%08X: SOCKS HandleClient connection request less than 6 error: %ld %ld\n", pta->dwRemoteThreadId, dwRet, WSAGetLastError());
-			goto exitthread;
-		}
-	}
-	else
-	{
-		if (bDebug) printf("%08X: SOCKS HandleClient connection request recv error: %ld %ld\n", pta->dwRemoteThreadId, dwRet, WSAGetLastError());
-		goto exitthread;
-	}
-
 
 	hEvents[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
 	hEvents[1] = CreateEvent(NULL, FALSE, FALSE, NULL);
