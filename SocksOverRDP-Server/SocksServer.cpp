@@ -155,7 +155,7 @@ int CheckAuthentication(char *buf_full, int ret)
 void sendReplyv4(char replyField)
 {
 	char	answer[8];
-	DWORD   dwWritten, ret;
+	DWORD   dwWritten;
 
 	struct threads *pta;
 
@@ -163,7 +163,7 @@ void sendReplyv4(char replyField)
 
 	pta = LookupThread(GetCurrentThreadId());
 
-	answer[0] = 4;
+	answer[0] = 0x00;
 	answer[1] = replyField;
 
 	if (replyField == 0x5A)
@@ -231,13 +231,74 @@ int getAddressInfo(sockaddr_in *sockaddrin, sockaddr_in6 *sockaddrin6, char *buf
 	if (buf[0] == 4)
 	{
 		sockaddrin->sin_family = AF_INET;
-		memcpy_s(&(sockaddrin->sin_port), 2, buf + 2, 2);
 		memcpy_s(&(sockaddrin->sin_addr), 4, buf + 4, 4);
 
-		char *s = (char *)malloc(INET_ADDRSTRLEN);
-		inet_ntop(AF_INET, &(sockaddrin->sin_addr), s, INET_ADDRSTRLEN);
-		if (bVerbose) printf("[+] SOCKS thread(%08X) getAddressInfo CONNECT IPv4: %s:%hd\n", GetCurrentThreadId(), s, htons(sockaddrin->sin_port));
-		free(s);
+		// Socks4a
+		if ((buf[4] == 0x00) && (buf[5] == 0x00) && (buf[6] == 0x00) && (buf[7] != 0x00))
+		{
+			if (bDebug) printf("%08X: SOCKS HandleClient Socks4a request\n", 0);
+
+			if (ret < 9)
+			{
+				if (bVerbose) printf("[-] SOCKS thread(%08Xd) getAddressInfo DNSv4a selected, length mismatch: %ld\n", GetCurrentThreadId(), ret);
+				return -1;
+			}
+
+			int i = 8;
+			int nulls = 0;
+			char *domainname = NULL;
+			BOOL solid = FALSE;
+			while (i < ret)
+			{ 
+				// looking for nulls. First after userid, second at end of domain name
+				if (buf[i++] == 0x00)
+					nulls++;
+
+				// first null byte found
+				if ((nulls == 1) && !domainname)
+					domainname = buf + i;
+
+				// second null byte found in boundaries
+				if (nulls == 2)
+				{
+					solid = TRUE;
+					break;
+				}
+			}
+			if (!solid)
+			{
+				if (bVerbose) printf("[-] SOCKS thread(%08Xd) getAddressInfo DNSv4a selected, corrup request: %ld\n", GetCurrentThreadId(), ret);
+				return -1;
+			}
+
+			ZeroMemory(&hints, sizeof(hints));
+
+			hints.ai_family = AF_INET;
+			hints.ai_socktype = SOCK_STREAM;
+			hints.ai_protocol = IPPROTO_TCP;
+			hints.ai_flags = AI_PASSIVE;
+
+			if ((ret = GetAddrInfoA(domainname, "1", &hints, &result)) != 0) {
+				if (bVerbose) printf("[-] SOCKS thread(%08X) getAddressInfo GetAddrInfoA v4a failed with error: %ld %ld\n", GetCurrentThreadId(), ret, WSAGetLastError());
+				return -1;
+			}
+			memcpy_s(sockaddrin, sizeof(sockaddr_in), result->ai_addr, sizeof(sockaddr_in));
+			memcpy_s(&(sockaddrin->sin_port), 2, buf + 2, 2);
+
+			char *s = (char *)malloc(INET_ADDRSTRLEN);
+			inet_ntop(AF_INET, &(sockaddrin->sin_addr), s, INET_ADDRSTRLEN);
+			if (bVerbose) printf("[+] SOCKS thread(%08X) getAddressInfo CONNECT DNSv4a: %s(%s):%hd\n", GetCurrentThreadId(), domainname, s, htons(sockaddrin->sin_port));
+			free(s);
+		}
+		else
+		{
+			memcpy_s(&(sockaddrin->sin_port), 2, buf + 2, 2);
+
+			char *s = (char *)malloc(INET_ADDRSTRLEN);
+			inet_ntop(AF_INET, &(sockaddrin->sin_addr), s, INET_ADDRSTRLEN);
+			if (bVerbose) printf("[+] SOCKS thread(%08X) getAddressInfo CONNECT IPv4: %s:%hd\n", GetCurrentThreadId(), s, htons(sockaddrin->sin_port));
+			free(s);
+		}
 	}
 
 	if (buf[0] == 5)
