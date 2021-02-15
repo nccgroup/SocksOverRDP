@@ -181,7 +181,7 @@ void sendReply(char replyField, char addressType, char *addr, char *port)
 	struct threads *pta;
 
 	answer = answer2 + sizeof(DWORD) + sizeof(DWORD) + 1;
-	memset(answer, 0, 300 + sizeof(DWORD) + sizeof(DWORD) + 1);
+	memset(answer2, 0, 300 + sizeof(DWORD) + sizeof(DWORD) + 1);
 	memset(null, 0, 20);
 
 	pta = LookupThread(GetCurrentThreadId());
