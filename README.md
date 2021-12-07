@@ -37,8 +37,6 @@ The *.exe* needs to be copied to the server and executed by any user.
 The tool works with Citrix Receiver that is used to connect to the Citrix server. Either an app or a full desktop can be provided to the user, the tool works in both cases if the plugin was correctly installed and the *.exe* server component was copied to and executed on the Citrix server.  
 **Citrix seems to have 32-bit Citrix Receiver only.** This means that if your operating system is 64-bit, and you have already registered the corresponding *.dll*, you need to unregister the *.dll* and use the 32-bit version. In case you use a 32-bit OS, you just register the *.dll* as mentioned above.  
 Please note that 64-bit windows has two *regsvr32.exe*, one in *%WINDIR%\system32\* (x64) and the one in *%WINDIR%\SysWOW64\* (x32), use the latter to register the 32-bit *.dll*, which will be automatically loaded by the Citrix Receiver upon execution. Everything else should be the same, please make sure you have followed the readme before opening issues on Github.
-  
-Although it is possible to disable the dynamic virtual channels in RDP, the following solution to do the same is ineffective for Citrix: [https://support.citrix.com/article/CTX202153](https://support.citrix.com/article/CTX202153)
 
 ### Options/Configuration ###
 The server component (*.exe*) does not need any configuration or requires any arguments. Although there is one for verbosity:
@@ -74,3 +72,8 @@ The server component (*.exe*) can be executed with any user, it will work with l
 The client component (*.dll*) by default is configured to listen only on localhost, if that is changed to for example 0.0.0.0 and there is no firewall or it is misconfigured, then it could result in a security issue, since other computers on the network can access the SOCKS Proxy and communicate over the RDP server. 
 
 **Please note that the SOCKS Server is only up, when the RDP/Citrix connection is alive and the executable is running on the server.**
+
+### Defence ###
+To prevent users to use this tool the only known way is to disable Virtual Channels in the Remote Desktop Server configuration. Although this blocks the usage of this tool indeed, it also disables copy&paste, which might be a show stopper or a big annoyance for the users.
+
+Although it is possible to disable the dynamic virtual channels in RDP, the following solution to do the same is ineffective for Citrix: [https://support.citrix.com/article/CTX202153](https://support.citrix.com/article/CTX202153)
