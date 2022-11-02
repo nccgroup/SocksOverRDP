@@ -66,6 +66,14 @@ This warning ensures that the user knows about the plugin is loaded and with wha
 ### Issues
 In case the plugin does not load or the executable does not run because it is missing some DLLs for example the VCRUNTIME140.DLL, you might want to install the [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-us/download/details.aspx?id=48145) package.
 
+On Windows 11 ARM64 this one has worked: [Redistributable](https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170#visual-studio-2015-2017-2019-and-2022)
+
+#### 0x8002801c
+On Windows 11 ARM64 (Macbook Pro M1) the following error message is shown at installation:
+`The module SocksOverRDP-Plugin.dll was located bt the call to DllRegisterServer failed with error code 0x8002801c`
+
+Although this error is shown, the module is properly installed and could be used.
+
 ### Security concerns ###
 The server component (*.exe*) can be executed with any user, it will work with low privileged users as well, there are no security risks associated with this component at all.
 
